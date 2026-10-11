@@ -1,0 +1,24 @@
+[Unit]
+Description=Miku VPN Gate Proxy Pool Manager
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/var/lib/miku
+ExecStart=/usr/local/bin/miku start JP US KR
+Restart=on-failure
+RestartSec=10s
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=miku
+
+# Security
+NoNewPrivileges=false
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
