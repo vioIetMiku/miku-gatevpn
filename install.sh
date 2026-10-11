@@ -162,12 +162,21 @@ log_step "创建命令链接..."
 
 cat > /usr/local/bin/miku << 'MIKUEOF'
 #!/bin/bash
-exec python3 -m miku.wizard "$@"
+exec python3 -m miku.cli "$@"
 MIKUEOF
 
 chmod +x /usr/local/bin/miku
 
 log_info "命令创建完成"
+
+# 安装 systemd 服务
+log_step "安装系统服务..."
+
+cp "$INSTALL_DIR/miku-web.service" /etc/systemd/system/
+systemctl daemon-reload
+systemctl enable miku-web.service
+
+log_info "系统服务已安装"
 
 # 完成安装
 echo ""
@@ -178,20 +187,27 @@ echo -e "${GREEN}║                                                            
 echo -e "${GREEN}╚════════════════════════════════════════════════════════════╝${NC}"
 echo ""
 
+# 启动服务
+log_step "启动 Web 服务..."
+
+systemctl start miku-web.service
+
+# 获取访问地址
+PUBLIC_IP=$(curl -s --max-time 5 https://api.ipify.org || hostname -I | awk '{print $1}')
+WEB_PORT=8787
+
 log_info "快速开始:"
 echo ""
-echo "  1. 运行安装向导:"
-echo "     miku"
+echo "  🌐 打开浏览器访问:"
 echo ""
-echo "  2. 或者测试检测功能:"
-echo "     python3 -m miku.detector.system"
-echo "     python3 -m miku.detector.panel"
+echo "     http://${PUBLIC_IP}:${WEB_PORT}"
 echo ""
-echo "  3. 测试 VPN Gate API:"
-echo "     python3 -m miku.outbound.vpngate"
+echo "  📋 所有配置都在 Web 面板完成，无需 SSH 操作"
 echo ""
-echo "  4. 检测节点质量:"
-echo "     python3 -m miku.outbound.checker <IP地址>"
+echo "  🔧 管理命令:"
+echo "     systemctl status miku-web    # 查看服务状态"
+echo "     systemctl restart miku-web   # 重启服务"
+echo "     journalctl -u miku-web -f    # 查看日志"
 echo ""
 
 log_info "文档: https://github.com/vioIetMiku/miku-gatevpn"

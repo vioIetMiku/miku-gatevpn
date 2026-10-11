@@ -1,0 +1,22 @@
+[Unit]
+Description=Miku-GateVPN Web Service
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/miku-gatevpn
+ExecStart=/usr/bin/python3 -m miku.cli web --port 8787
+Restart=on-failure
+RestartSec=10s
+
+# Security
+NoNewPrivileges=false
+PrivateTmp=true
+
+# Logs
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

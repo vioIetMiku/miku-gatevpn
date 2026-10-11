@@ -56,11 +56,13 @@
 curl -sSL https://raw.githubusercontent.com/vioIetMiku/miku-gatevpn/main/install.sh | sudo bash
 ```
 
-安装完成后，运行交互式向导：
+安装完成后，**打开浏览器访问 Web 管理面板**：
 
-```bash
-sudo miku
 ```
+http://您的服务器IP:8787
+```
+
+**所有配置都在 Web 界面完成，无需 SSH 操作！**
 
 ### 安装流程演示
 

@@ -15,7 +15,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'miku=miku.cli:main',
+            'miku=miku.cli:cli',
         ],
     },
     python_requires='>=3.8',
