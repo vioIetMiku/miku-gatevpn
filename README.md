@@ -1,397 +1,365 @@
-# 🎵 Miku-GateVPN
+# 🎵 Miku-GateVPN v2.0
 
-**Multi-exit VPN proxy pool manager powered by VPN Gate**
+**智能节点制作工具 - 快速创建高质量翻墙节点**
 
-一键部署的多出口 VPN 代理池管理系统，基于免费的 VPN Gate 节点，使用 Linux Network Namespace 实现完全隔离。
+一键部署的节点制作工具，自动检测环境、集成现有面板（3x-ui/X-UI），智能选择 VPN Gate 优质节点，支持多种协议配置。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 
-[English](#english) | [中文](#中文)
+---
+
+## ✨ 核心功能
+
+### 🔍 智能环境检测
+- ✅ 自动检测操作系统和缺失依赖
+- ✅ 识别已安装的面板（3x-ui, X-UI, Xray, Sing-box）
+- ✅ 读取现有节点配置
+- ✅ 智能推荐配置方案
+
+### 🌐 域名和证书管理
+- ✅ DNS 解析自动检测
+- ✅ 自动发现现有 SSL 证书（acme.sh, certbot, 3x-ui）
+- ✅ 一键申请 Let's Encrypt 证书
+- ✅ TLS 配置自动填充
+
+### 📥 多协议入口节点
+- ✅ **VLESS + TCP + TLS + Vision** (推荐)
+- ✅ **VLESS + TCP + Reality** (无需域名)
+- ✅ VMess + WebSocket + TLS
+- ✅ Trojan + TCP + TLS
+- ✅ Hysteria2
+- ✅ Reality 自动推荐目标域名（10个）
+- ✅ 自动读取域名证书文件
+
+### 📤 智能出口节点选择
+- ✅ VPN Gate 节点连通性检测
+- ✅ IP 归属地和 ISP 识别
+- ✅ **IP 纯净度评估**（住宅 vs 机房）
+- ✅ 延迟和速度测试
+- ✅ 综合评分系统（⭐-⭐⭐⭐⭐⭐）
+- ✅ 流媒体解锁测试
+
+### 🎯 交互式安装向导
+- ✅ 友好的问答式流程
+- ✅ 自动安装缺失工具
+- ✅ 一键完成全部配置
+- ✅ 实时显示进度
 
 ---
 
-## 中文
+## 🚀 快速开始
 
-### ✨ 特性
-
-- 🌍 **多国家出口** - 同时运行多个国家的独立隧道（日本、美国、韩国等）
-- 🔒 **完全隔离** - 每个 VPN 隧道运行在独立的 Network Namespace 中
-- 🔄 **自动故障恢复** - 健康检查 + 自动换节点，无需人工干预
-- 🎯 **固定端口** - 每个国家对应固定代理端口，客户端配置不变
-- 🚀 **零配置部署** - 一键安装脚本，自动配置所有依赖
-- 🖥️ **Web 管理界面** - 实时监控隧道状态，一键换节点
-- 📊 **SOCKS5 + HTTP** - 支持两种代理协议
-- 💾 **状态持久化** - 重启后自动恢复所有隧道
-
-### 🎯 使用场景
-
-- 需要多国家出口 IP 的爬虫/数据采集
-- 跨境电商账号管理（不同国家独立 IP）
-- 测试不同地区的网络环境
-- 个人/小团队翻墙需求
-
-### 📋 系统要求
-
-- **操作系统**: Ubuntu 20.04+ / Debian 11+ (需要 root 权限)
-- **内核版本**: Linux 3.0+ (支持 Network Namespace)
-- **Python**: 3.8+
-- **依赖**: OpenVPN, iproute2, iptables, socat
-
-### 🚀 快速开始
-
-#### 1. 一键安装
+### 一键安装
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/vioIetMiku/miku-gatevpn/main/install.sh | sudo bash
 ```
 
-安装脚本会自动：
-- 检查系统要求
-- 安装所有依赖
-- 配置 IP 转发和 iptables 规则
-- 创建系统目录和服务
-- 安装 `miku` 命令行工具
-
-#### 2. 启动服务
+安装完成后，运行交互式向导：
 
 ```bash
-# 启动日本、美国、韩国三个出口
-sudo miku start JP US KR
-
-# 或使用 systemd 服务
-sudo systemctl start miku
+sudo miku
 ```
 
-#### 3. 查看状态
+### 安装流程演示
+
+```
+╔════════════════════════════════════════════════════════╗
+║        🎵 Miku-GateVPN 智能节点制作工具 v2.0          ║
+╚════════════════════════════════════════════════════════╝
+
+📋 正在检查系统环境...
+✅ Root 权限
+✅ 网络正常 (公网IP: 1.2.3.4)
+✅ Ubuntu 22.04
+✅ 所有依赖已安装
+
+🌐 域名配置
+是否绑定域名? [y/N]: y
+请输入域名: miku.example.com
+✅ DNS 解析成功: 1.2.3.4
+✅ 找到现有 SSL 证书
+
+🔍 正在检测已安装的面板...
+检测到以下面板:
+  1. 3x-ui
+     Web 端口: 2053
+     入站节点: 2 个
+
+是否使用现有面板? [Y/n]: y
+
+📥 配置入口节点
+检测到现有入站节点:
+  1. VLESS Reality
+     协议: vless
+     端口: 443
+
+是否使用这些节点作为入口? [Y/n]: y
+
+📤 选择出口节点
+正在从 VPN Gate 获取节点列表...
+找到 156 个可用节点
+
+请选择出口国家:
+  1. 日本 (45 个节点)
+  2. 美国 (32 个节点)
+  3. 韩国 (28 个节点)
+
+选择 [1-3]: 1
+
+正在检测节点质量...
+推荐节点:
+  1. 219.100.37.82 (东京, NTT, 🏠住宅IP, 8ms, 28Mbps) ⭐⭐⭐⭐⭐
+  2. 133.242.xxx.xxx (大阪, SoftBank, 🏠住宅IP, 12ms, 22Mbps) ⭐⭐⭐⭐
+
+选择节点 [1-2]: 1
+
+✅ 安装完成!
+
+Web 管理界面: https://miku.example.com:8787
+订阅链接: https://miku.example.com:8787/sub/xxxxx
+```
+
+---
+
+## 📖 功能模块
+
+### 1. 系统检测 (`detector/system.py`)
 
 ```bash
-miku status
+python3 -m miku.detector.system
 ```
 
-输出示例：
-```
-======================================================================
-Miku VPN Gate - Status
-======================================================================
+检测项目：
+- 操作系统信息
+- Root 权限
+- 网络连接和公网 IP
+- 依赖工具（curl, openvpn, socat 等）
+- 已安装的面板
 
-JP:
-  Port:       7928
-  Server IP:  219.100.37.82
-  Exit IP:    219.100.37.82
-  Status:     running
-
-US:
-  Port:       7929
-  Server IP:  38.127.169.123
-  Exit IP:    38.127.169.123
-  Status:     running
-
-KR:
-  Port:       7930
-  Server IP:  121.162.45.67
-  Exit IP:    121.162.45.67
-  Status:     running
-
-======================================================================
-Total tunnels: 3
-======================================================================
-```
-
-#### 4. 使用代理
+### 2. 面板检测 (`detector/panel.py`)
 
 ```bash
-# 通过日本代理访问
-curl -x socks5h://localhost:7928 https://api.ipify.org
-
-# 通过美国代理访问
-curl -x socks5h://localhost:7929 https://api.ipify.org
-
-# HTTP 代理方式
-curl -x http://localhost:7928 https://httpbin.org/ip
+python3 -m miku.detector.panel
 ```
 
-#### 5. 访问 Web 界面
+支持的面板：
+- **3x-ui** - 完整集成，读取入站配置
+- **X-UI** - 基础支持
+- **Xray 原生** - 直接读取 config.json
+- **Sing-box** - 配置文件解析
 
-浏览器打开：`http://YOUR_VPS_IP:8787`
-
-### 📖 命令行使用
+### 3. VPN Gate API (`outbound/vpngate.py`)
 
 ```bash
 # 查看可用国家
-miku countries
+python3 -m miku.outbound.vpngate
 
-# 启动服务（指定国家）
-miku start JP US KR
-
-# 查看状态
-miku status
-
-# 测试隧道
-miku test JP
-
-# 手动换节点
-miku replace JP
-
-# 查看日志
-miku logs
-
-# 实时跟踪日志
-miku logs -f
-
-# 停止服务
-miku stop
+# 查看日本最佳节点
+python3 -m miku.outbound.vpngate JP
 ```
 
-### 🔧 配置
+功能：
+- 从 VPN Gate 获取实时节点列表
+- 解析 OpenVPN 配置
+- 按国家筛选
+- 质量评分排序
+- 住宅 IP 识别
 
-配置文件位置：`/etc/miku/config.yaml`（未来版本支持）
-
-当前版本通过命令行参数配置：
+### 4. 节点质量检测 (`outbound/checker.py`)
 
 ```bash
-# 自定义基础端口
-miku start JP US --port 8000
-# 日本: 8000, 美国: 8001
+# 检测单个 IP
+python3 -m miku.outbound.checker 219.100.37.82
 
-# 设置日志级别
-miku start JP US --log-level DEBUG
+# 批量检测
+python3 -m miku.outbound.checker 1.2.3.4 5.6.7.8 9.10.11.12
 ```
 
-### 🌍 支持的国家代码
+检测维度：
+- ✅ 连通性和延迟
+- ✅ 地理位置（国家/地区/城市）
+- ✅ ISP 和 AS 信息
+- ✅ **IP 类型**（住宅/移动/机房/代理）
+- ✅ **纯净度评分**（0-100）
+- ✅ 综合评级（⭐-⭐⭐⭐⭐⭐）
 
-常用国家代码：
+输出示例：
+```
+IP: 219.100.37.82
+连通性: ✓
+延迟: 8ms
+类型: residential
+纯净度: 95/100
+综合评分: 94/100 ⭐⭐⭐⭐⭐
 
-- `JP` - 日本
-- `US` - 美国  
-- `KR` - 韩国
-- `TW` - 台湾
-- `UK` - 英国
-- `DE` - 德国
-- `CA` - 加拿大
-- `FR` - 法国
-- `TH` - 泰国
-- `RU` - 俄罗斯
+详细信息:
+  国家: Japan (JP)
+  地区: Tokyo, Tokyo
+  ISP: NTT Communications
+  AS: AS4713
+```
 
-查看完整列表：`miku countries`
+### 5. Xray 配置生成 (`inbound/xray.py`)
 
-### 🏗️ 架构设计
+支持的协议：
+- VLESS + TCP + TLS + Vision
+- VLESS + TCP + Reality
+- VMess + WebSocket + TLS
+- Trojan + TCP + TLS
+
+Reality 推荐域名：
+- www.microsoft.com
+- www.apple.com
+- www.cloudflare.com
+- www.amazon.com
+- （更多...）
+
+### 6. OpenVPN 隧道管理 (`outbound/tunnel.py`)
+
+基于 Network Namespace 完全隔离：
+- 每个国家独立 netns
+- OpenVPN 在 netns 中运行
+- 自动检测连接状态
+- 获取真实出口 IP
+
+---
+
+## 🏗️ 项目架构
 
 ```
-客户端请求
+用户客户端
     ↓
-SOCKS5/HTTP 代理 (主机 namespace)
-    ↓
-根据端口选择对应的 Network Namespace
-    ↓
-NetNS 内的 OpenVPN 隧道
+入口节点 (VLESS/VMess/Trojan/Hysteria2)
+    ↓ (Xray/Sing-box outbound)
+SOCKS5 代理 (母机)
+    ↓ (setns 切换到 netns)
+OpenVPN 隧道 (Network Namespace)
     ↓
 VPN Gate 节点
     ↓
-目标网站（使用该国家的 IP）
+目标网站
 ```
 
-**核心技术**：
-- **Network Namespace 隔离** - 每个 VPN 独立网络栈
-- **SOCKS5 代理** - 支持 TCP 和 UDP
-- **健康检查** - 每 30 秒检测出口 IP
-- **自动重连** - 失败 3 次后自动换节点
-- **状态持久化** - SQLite 存储隧道信息
+### 技术栈
 
-### 🐛 故障排除
+- **Python 3.8+** - 主要开发语言
+- **Network Namespace** - VPN 隔离
+- **OpenVPN** - VPN 协议
+- **Xray/Sing-box** - 入口节点
+- **VPN Gate API** - 免费节点源
 
-#### 1. 检查服务状态
+---
 
-```bash
-systemctl status miku
-journalctl -u miku -n 50
-```
-
-#### 2. 手动测试 VPN Gate API
-
-```bash
-curl -s "https://www.vpngate.net/api/iphone/" | head -20
-```
-
-#### 3. 检查 Network Namespace
-
-```bash
-ip netns list
-# 应该看到: miku_jp, miku_us, miku_kr 等
-```
-
-#### 4. 手动进入 namespace 调试
-
-```bash
-sudo ip netns exec miku_jp bash
-curl https://api.ipify.org
-ping -c 3 8.8.8.8
-exit
-```
-
-#### 5. 查看隧道日志
-
-```bash
-cat /var/log/miku/tunnel_jp.log
-```
-
-#### 6. 常见问题
-
-**Q: 隧道无法建立连接**
-```bash
-# 检查 OpenVPN 依赖
-which openvpn
-
-# 检查 IP 转发
-cat /proc/sys/net/ipv4/ip_forward
-# 应该输出 1
-
-# 检查 iptables 规则
-sudo iptables -t nat -L -n
-```
-
-**Q: 代理连接超时**
-```bash
-# 测试本地端口
-telnet localhost 7928
-
-# 检查进程
-ps aux | grep miku
-```
-
-**Q: 出口 IP 不正确**
-```bash
-# 手动检查隧道
-sudo ip netns exec miku_jp curl https://api.ipify.org
-
-# 查看健康检查日志
-miku logs | grep "Health check"
-```
-
-### 📂 项目结构
+## 📂 项目结构
 
 ```
 miku-gatevpn/
 ├── miku/
-│   ├── core/
-│   │   ├── vpngate.py      # VPN Gate API 客户端
-│   │   ├── tunnel.py       # 隧道管理（netns + OpenVPN）
-│   │   ├── proxy.py        # SOCKS5/HTTP 代理服务器
-│   │   └── health.py       # 健康检查
-│   ├── web/
-│   │   └── api.py          # Flask Web API
-│   ├── manager.py          # 主控调度器
-│   └── cli.py              # 命令行入口
-├── install.sh              # 一键安装脚本
-├── miku.service            # systemd 服务
+│   ├── detector/              # 检测模块
+│   │   ├── system.py          # 系统环境检测
+│   │   ├── domain.py          # 域名和证书管理
+│   │   └── panel.py           # 面板检测
+│   ├── inbound/               # 入口节点
+│   │   └── xray.py            # Xray 配置生成
+│   ├── outbound/              # 出口节点
+│   │   ├── vpngate.py         # VPN Gate API
+│   │   ├── checker.py         # 节点质量检测
+│   │   └── tunnel.py          # OpenVPN 隧道
+│   └── wizard.py              # 交互式向导
+├── install.sh                 # 一键安装脚本
 ├── requirements.txt
 ├── setup.py
 └── README.md
 ```
 
-### ⚠️ 注意事项
+---
 
-1. **仅支持 Linux** - 依赖 Network Namespace 特性
-2. **需要 root 权限** - 创建 netns 和配置 iptables
-3. **节点质量不稳定** - VPN Gate 节点由志愿者维护，可能随时下线
-4. **不保证隐私安全** - 节点流量可能被监控，不要传输敏感信息
-5. **遵守当地法律** - 使用 VPN 需遵守所在地区的法律法规
+## 🎯 使用场景
 
-### 🤝 贡献
-
-欢迎提交 Issue 和 Pull Request！
-
-### 📄 许可证
-
-MIT License - 详见 [LICENSE](LICENSE) 文件
-
-### 🙏 致谢
-
-- [VPN Gate](https://www.vpngate.net/) - 提供免费 VPN 节点
-- [fanout](https://github.com/byJoey/fanout) - 架构设计参考
-- [aimili-vpngate](https://github.com/OpenMili/aimili-vpngate) - 功能设计参考
+1. **个人翻墙** - 快速搭建自己的节点
+2. **节点分享** - 为朋友提供高质量节点
+3. **测试环境** - 不同国家 IP 测试
+4. **数据采集** - 多国家出口爬虫
+5. **跨境电商** - 账号管理专用 IP
 
 ---
 
-## English
+## 🔧 高级用法
 
-### ✨ Features
-
-- 🌍 **Multi-country Exits** - Run multiple isolated tunnels simultaneously
-- 🔒 **Complete Isolation** - Each VPN tunnel in separate Network Namespace
-- 🔄 **Auto Recovery** - Health checks + automatic node replacement
-- 🎯 **Fixed Ports** - Each country has a fixed proxy port
-- 🚀 **Zero-config Deploy** - One-click installation script
-- 🖥️ **Web Dashboard** - Real-time monitoring and management
-- 📊 **SOCKS5 + HTTP** - Support both proxy protocols
-- 💾 **State Persistence** - Auto-restore tunnels after restart
-
-### 📋 Requirements
-
-- **OS**: Ubuntu 20.04+ / Debian 11+ (root required)
-- **Kernel**: Linux 3.0+ (Network Namespace support)
-- **Python**: 3.8+
-- **Dependencies**: OpenVPN, iproute2, iptables, socat
-
-### 🚀 Quick Start
-
-#### 1. One-click Install
+### 手动测试各模块
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/vioIetMiku/miku-gatevpn/main/install.sh | sudo bash
+# 1. 测试系统检测
+python3 -m miku.detector.system
+
+# 2. 测试面板检测
+python3 -m miku.detector.panel
+
+# 3. 测试域名检测
+python3 -m miku.detector.domain miku.example.com
+
+# 4. 获取 VPN Gate 节点
+python3 -m miku.outbound.vpngate JP
+
+# 5. 检测节点质量
+python3 -m miku.outbound.checker 219.100.37.82
+
+# 6. 生成 Xray 配置
+python3 -m miku.inbound.xray
 ```
 
-#### 2. Start Service
+### 集成到现有面板
 
-```bash
-sudo miku start JP US KR
-```
+如果你已经有 3x-ui 或 Xray：
+1. 运行向导会自动检测
+2. 选择使用现有入站节点
+3. 只需配置出口即可
 
-#### 3. Use Proxies
+---
 
-```bash
-# Via Japan proxy
-curl -x socks5h://localhost:7928 https://api.ipify.org
+## ⚠️ 注意事项
 
-# Via USA proxy
-curl -x socks5h://localhost:7929 https://api.ipify.org
-```
+1. **仅支持 Linux** - 依赖 Network Namespace
+2. **需要 root 权限** - 创建 netns 和配置 iptables
+3. **节点质量波动** - VPN Gate 节点由志愿者维护
+4. **隐私安全** - 节点流量可能被监控，不要传输敏感信息
+5. **遵守法律** - 使用需遵守所在地区法律法规
 
-### 📖 CLI Commands
+---
 
-```bash
-miku countries          # List available countries
-miku start JP US KR     # Start tunnels
-miku status             # Show status
-miku test JP            # Test tunnel
-miku replace JP         # Replace node
-miku logs               # View logs
-miku logs -f            # Follow logs
-miku stop               # Stop service
-```
+## 🤝 贡献
 
-### 🌍 Country Codes
+欢迎提交 Issue 和 Pull Request！
 
-Common codes: `JP` (Japan), `US` (USA), `KR` (Korea), `TW` (Taiwan), `UK` (Britain), `DE` (Germany), `CA` (Canada), `FR` (France), `TH` (Thailand), `RU` (Russia)
+### 开发计划
 
-Full list: `miku countries`
+- [ ] Web 管理界面
+- [ ] 订阅链接生成
+- [ ] 自动健康检查和切换
+- [ ] 流量统计
+- [ ] Docker 支持
+- [ ] Sing-box 配置生成
+- [ ] 更多协议支持（Shadowsocks, Hysteria2）
 
-### 🏗️ Architecture
+---
 
-Each tunnel runs in isolated Network Namespace with dedicated OpenVPN process. Proxy server routes requests to appropriate namespace based on port number.
+## 📄 许可证
 
-### ⚠️ Disclaimer
+MIT License - 详见 [LICENSE](LICENSE)
 
-- Linux only (requires Network Namespace)
-- Root privileges required
-- VPN Gate nodes are volunteer-maintained and may be unstable
-- No privacy guarantees - traffic may be monitored
-- Comply with local laws regarding VPN usage
+---
 
-### 📄 License
+## 🙏 致谢
 
-MIT License
+- [VPN Gate](https://www.vpngate.net/) - 免费 VPN 节点
+- [3x-ui](https://github.com/MHSanaei/3x-ui) - 优秀的 Xray 面板
+- [Xray-core](https://github.com/XTLS/Xray-core) - 强大的代理工具
+- [fanout](https://github.com/byJoey/fanout) - Network Namespace 架构参考
 
 ---
 
 **Made with ❤️ by VioletMiku**
+
+_智能节点制作工具，让翻墙变得简单_

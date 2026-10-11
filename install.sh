@@ -1,293 +1,200 @@
 #!/bin/bash
-# Miku VPN Gate - One-click installation script
-# https://github.com/vioIetMiku/miku-gatevpn
+# Miku-GateVPN v2.0 - 智能节点制作工具
+# 一键安装脚本
 
 set -euo pipefail
 
-# Colors
+# 颜色定义
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
-echo_info() { echo -e "${GREEN}[INFO]${NC} $1"; }
-echo_error() { echo -e "${RED}[ERROR]${NC} $1"; }
-echo_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
-echo_step() { echo -e "${BLUE}[STEP]${NC} $1"; }
+log_info() { echo -e "${GREEN}[INFO]${NC} $1"; }
+log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
+log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
+log_step() { echo -e "${BLUE}[STEP]${NC} $1"; }
 
-# Banner
+# 显示横幅
 cat << "EOF"
-    __  __ _ _          __     ______  _   _
-   |  \/  (_) | ___   __\ \   / /  _ \| \ | |
-   | |\/| | | |/ / | | |\ \ / /| |_) |  \| |
-   | |  | | |   <| |_| | \ V / |  __/| |\  |
-   |_|  |_|_|_|\_\\__,_|  \_/  |_|   |_| \_|
-
-   VPN Gate Proxy Pool Manager v1.0.0
-   https://github.com/vioIetMiku/miku-gatevpn
+╔════════════════════════════════════════════════════════╗
+║                                                        ║
+║        🎵 Miku-GateVPN 智能节点制作工具 v2.0          ║
+║                                                        ║
+║        为您快速创建高质量翻墙节点                      ║
+║                                                        ║
+╚════════════════════════════════════════════════════════╝
 EOF
 echo ""
 
-# 1. Check root privileges
-echo_step "Checking privileges..."
+# 检查 root 权限
 if [[ $EUID -ne 0 ]]; then
-   echo_error "This script must be run as root"
-   echo "Please run: sudo bash install.sh"
+   log_error "需要 root 权限运行此脚本"
+   echo "请使用: sudo bash install.sh"
    exit 1
 fi
-echo_info "Running as root ✓"
 
-# 2. Check OS
-echo_step "Checking operating system..."
+log_info "开始安装..."
+
+# 检测操作系统
 if [[ -f /etc/os-release ]]; then
     . /etc/os-release
     OS=$ID
-    echo_info "Detected: $PRETTY_NAME"
+    log_info "检测到系统: $PRETTY_NAME"
 else
-    echo_error "Cannot determine OS"
+    log_error "无法识别操作系统"
     exit 1
 fi
 
-if [[ "$OS" != "ubuntu" && "$OS" != "debian" ]]; then
-    echo_warn "This script is designed for Ubuntu/Debian"
-    echo_warn "Installation may fail on other distributions"
-    read -p "Continue anyway? (y/N) " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        exit 1
-    fi
-fi
+# 更新包管理器
+log_step "更新包管理器..."
+case $OS in
+    ubuntu|debian)
+        export DEBIAN_FRONTEND=noninteractive
+        apt-get update -qq
+        PKG_MANAGER="apt-get"
+        ;;
+    centos|rhel|fedora)
+        yum update -y -q
+        PKG_MANAGER="yum"
+        ;;
+    *)
+        log_warn "未测试的操作系统，可能会失败"
+        PKG_MANAGER="apt-get"
+        ;;
+esac
 
-# 3. Check kernel version
-echo_step "Checking kernel version..."
-KERNEL_VERSION=$(uname -r)
-echo_info "Kernel version: $KERNEL_VERSION"
+# 安装依赖
+log_step "安装系统依赖..."
 
-KERNEL_MAJOR=$(echo $KERNEL_VERSION | cut -d. -f1)
-KERNEL_MINOR=$(echo $KERNEL_VERSION | cut -d. -f2)
+DEPS="curl wget git python3 python3-pip openvpn iproute2 iptables socat openssl sqlite3"
 
-if [[ $KERNEL_MAJOR -lt 3 ]]; then
-    echo_error "Linux kernel 3.0+ required for network namespace support"
-    exit 1
-fi
-echo_info "Kernel version OK ✓"
+case $OS in
+    ubuntu|debian)
+        apt-get install -y $DEPS &> /dev/null
+        ;;
+    centos|rhel|fedora)
+        yum install -y $DEPS &> /dev/null
+        ;;
+esac
 
-# 4. Check Python version
-echo_step "Checking Python version..."
-if ! command -v python3 &> /dev/null; then
-    echo_error "Python 3 not found. Installing..."
-    apt-get update -qq
-    apt-get install -y python3 python3-pip
-fi
+log_info "依赖安装完成"
 
+# 检查 Python 版本
 PYTHON_VERSION=$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
-echo_info "Python version: $PYTHON_VERSION"
+log_info "Python 版本: $PYTHON_VERSION"
 
-PYTHON_MAJOR=$(echo $PYTHON_VERSION | cut -d. -f1)
-PYTHON_MINOR=$(echo $PYTHON_VERSION | cut -d. -f2)
-
-if [[ $PYTHON_MAJOR -lt 3 ]] || [[ $PYTHON_MINOR -lt 8 ]]; then
-    echo_error "Python 3.8+ required (found: $PYTHON_VERSION)"
-    exit 1
-fi
-echo_info "Python version OK ✓"
-
-# 5. Install system dependencies
-echo_step "Installing system dependencies..."
-echo_info "This may take a few minutes..."
-
-export DEBIAN_FRONTEND=noninteractive
-
-apt-get update -qq
-
-apt-get install -y \
-    openvpn \
-    iproute2 \
-    iptables \
-    iptables-persistent \
-    curl \
-    socat \
-    python3-pip \
-    python3-venv \
-    git \
-    sqlite3 \
-    &> /dev/null
-
-echo_info "Dependencies installed ✓"
-
-# 6. Enable IP forwarding
-echo_step "Enabling IP forwarding..."
+# 启用 IP 转发
+log_step "配置网络..."
 
 if ! grep -q "net.ipv4.ip_forward=1" /etc/sysctl.conf; then
     echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf
 fi
-
 sysctl -w net.ipv4.ip_forward=1 > /dev/null
-echo_info "IP forwarding enabled ✓"
 
-# 7. Configure iptables
-echo_step "Configuring iptables rules..."
+log_info "IP 转发已启用"
 
-# Detect main network interface
-MAIN_INTERFACE=$(ip route | grep default | awk '{print $5}' | head -1)
-echo_info "Main network interface: $MAIN_INTERFACE"
+# 配置 iptables NAT
+MAIN_IF=$(ip route | grep default | awk '{print $5}' | head -1)
+log_info "主网络接口: $MAIN_IF"
 
-# Add NAT rules
-if ! iptables -t nat -C POSTROUTING -s 10.200.0.0/16 -o $MAIN_INTERFACE -j MASQUERADE 2>/dev/null; then
-    iptables -t nat -A POSTROUTING -s 10.200.0.0/16 -o $MAIN_INTERFACE -j MASQUERADE
-    echo_info "Added NAT rule for 10.200.0.0/16"
+# 添加 NAT 规则
+if ! iptables -t nat -C POSTROUTING -o $MAIN_IF -j MASQUERADE 2>/dev/null; then
+    iptables -t nat -A POSTROUTING -o $MAIN_IF -j MASQUERADE
 fi
 
-# Allow forwarding from veth interfaces
-if ! iptables -C FORWARD -i veth+ -j ACCEPT 2>/dev/null; then
-    iptables -A FORWARD -i veth+ -j ACCEPT
-    echo_info "Added FORWARD rule for veth interfaces"
+# 保存规则
+if command -v netfilter-persistent &> /dev/null; then
+    netfilter-persistent save &> /dev/null
+elif command -v iptables-save &> /dev/null; then
+    iptables-save > /etc/iptables/rules.v4 2>/dev/null || true
 fi
 
-# Save rules
-netfilter-persistent save &> /dev/null
-echo_info "iptables rules configured ✓"
+log_info "iptables 规则已配置"
 
-# 8. Create directories
-echo_step "Creating system directories..."
+# 创建目录
+log_step "创建系统目录..."
 
 mkdir -p /var/lib/miku
 mkdir -p /var/log/miku
 mkdir -p /etc/miku
 
-chmod 755 /var/lib/miku /var/log/miku /etc/miku
-echo_info "Directories created ✓"
+log_info "目录创建完成"
 
-# 9. Clean up old installations
-echo_step "Cleaning up old installations..."
-
-# Stop service if running
-if systemctl is-active --quiet miku 2>/dev/null; then
-    systemctl stop miku
-    echo_info "Stopped old miku service"
-fi
-
-# Remove old namespaces
-for ns in $(ip netns list 2>/dev/null | grep "miku_" | awk '{print $1}'); do
-    echo_info "Removing old namespace: $ns"
-    ip netns del $ns 2>/dev/null || true
-done
-
-# Remove old venv
-if [[ -d /opt/miku-venv ]]; then
-    rm -rf /opt/miku-venv
-    echo_info "Removed old virtual environment"
-fi
-
-# 10. Clone repository
-echo_step "Downloading miku-gatevpn..."
+# 克隆仓库
+log_step "下载 Miku-GateVPN..."
 
 INSTALL_DIR="/opt/miku-gatevpn"
 
 if [[ -d "$INSTALL_DIR" ]]; then
-    echo_info "Removing old installation..."
-    rm -rf "$INSTALL_DIR"
-fi
-
-git clone https://github.com/vioIetMiku/miku-gatevpn.git "$INSTALL_DIR" &> /dev/null
-
-if [[ ! -d "$INSTALL_DIR" ]]; then
-    echo_error "Failed to download miku-gatevpn"
-    exit 1
+    log_warn "检测到旧版本，正在更新..."
+    cd "$INSTALL_DIR"
+    git pull &> /dev/null || {
+        log_warn "更新失败，重新克隆..."
+        cd /opt
+        rm -rf miku-gatevpn
+        git clone https://github.com/vioIetMiku/miku-gatevpn.git &> /dev/null
+    }
+else
+    cd /opt
+    git clone https://github.com/vioIetMiku/miku-gatevpn.git &> /dev/null
 fi
 
 cd "$INSTALL_DIR"
-echo_info "Downloaded to $INSTALL_DIR ✓"
+log_info "代码下载完成"
 
-# 11. Install Python package
-echo_step "Installing miku-gatevpn Python package..."
+# 安装 Python 依赖
+log_step "安装 Python 依赖..."
 
-python3 -m venv /opt/miku-venv
-source /opt/miku-venv/bin/activate
+pip3 install -q --upgrade pip
+pip3 install -q -r requirements.txt
 
-pip install --upgrade pip setuptools wheel &> /dev/null
-pip install -e . &> /dev/null
+log_info "Python 依赖安装完成"
 
-deactivate
-echo_info "Python package installed ✓"
+# 安装 Miku 包
+pip3 install -q -e .
 
-# 12. Create command-line tool
-echo_step "Creating miku command..."
+log_info "Miku 包安装完成"
+
+# 创建命令链接
+log_step "创建命令链接..."
 
 cat > /usr/local/bin/miku << 'MIKUEOF'
 #!/bin/bash
-source /opt/miku-venv/bin/activate
-exec python3 -m miku.cli "$@"
+exec python3 -m miku.wizard "$@"
 MIKUEOF
 
 chmod +x /usr/local/bin/miku
-echo_info "Command created: miku ✓"
 
-# 13. Install systemd service
-echo_step "Installing systemd service..."
+log_info "命令创建完成"
 
-cp miku.service /etc/systemd/system/
-systemctl daemon-reload
-systemctl enable miku &> /dev/null
-
-echo_info "Systemd service installed ✓"
-
-# 14. Test installation
-echo_step "Testing installation..."
-
-if ! command -v miku &> /dev/null; then
-    echo_error "miku command not found"
-    exit 1
-fi
-
-# Test VPN Gate API
-if ! miku countries &> /dev/null; then
-    echo_warn "VPN Gate API test failed (might be network issue)"
-else
-    echo_info "VPN Gate API accessible ✓"
-fi
-
-# 15. Complete
+# 完成安装
 echo ""
 echo -e "${GREEN}╔════════════════════════════════════════════════════════════╗${NC}"
 echo -e "${GREEN}║                                                            ║${NC}"
-echo -e "${GREEN}║          Miku VPN Gate Installation Complete! 🎉          ║${NC}"
+echo -e "${GREEN}║          安装完成！ 🎉                                     ║${NC}"
 echo -e "${GREEN}║                                                            ║${NC}"
 echo -e "${GREEN}╚════════════════════════════════════════════════════════════╝${NC}"
 echo ""
 
-# Get server IP
-SERVER_IP=$(curl -s ifconfig.me 2>/dev/null || echo "YOUR_SERVER_IP")
+log_info "快速开始:"
+echo ""
+echo "  1. 运行安装向导:"
+echo "     miku"
+echo ""
+echo "  2. 或者测试检测功能:"
+echo "     python3 -m miku.detector.system"
+echo "     python3 -m miku.detector.panel"
+echo ""
+echo "  3. 测试 VPN Gate API:"
+echo "     python3 -m miku.outbound.vpngate"
+echo ""
+echo "  4. 检测节点质量:"
+echo "     python3 -m miku.outbound.checker <IP地址>"
+echo ""
 
-echo_info "Quick Start:"
-echo ""
-echo "  1. Start Miku with countries:"
-echo "     miku start JP US KR"
-echo ""
-echo "  2. Check status:"
-echo "     miku status"
-echo ""
-echo "  3. Test proxy:"
-echo "     curl -x socks5h://localhost:7928 https://api.ipify.org"
-echo ""
-echo "  4. View available countries:"
-echo "     miku countries"
-echo ""
-echo "  5. Access Web UI:"
-echo "     http://$SERVER_IP:8787"
-echo ""
-echo_info "System Service:"
-echo ""
-echo "  Start:   systemctl start miku"
-echo "  Stop:    systemctl stop miku"
-echo "  Status:  systemctl status miku"
-echo "  Logs:    journalctl -u miku -f"
-echo ""
-echo_warn "Note: You need to configure which countries to use in /etc/systemd/system/miku.service"
-echo_warn "Edit the ExecStart line and then run: systemctl daemon-reload && systemctl restart miku"
-echo ""
-echo_info "Documentation: https://github.com/vioIetMiku/miku-gatevpn"
+log_info "文档: https://github.com/vioIetMiku/miku-gatevpn"
 echo ""
 
 exit 0
